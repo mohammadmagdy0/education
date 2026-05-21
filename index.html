@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Educational Platform - Student Dashboard</title>
+    <style>
+        /* تصميم عصري بنمط الـ Glassmorphism المظلم */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .platform-container {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #38bdf8;
+            font-size: 24px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-charge {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn-charge:hover {
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+        }
+
+        .btn-charge:active {
+            transform: scale(0.98);
+        }
+
+        /* شاشة التنبيهات */
+        .alert {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+
+        .alert-success { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; }
+        .alert-error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; }
+        .alert-warn { background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; }
+    </style>
+</head>
+<body>
+
+<div class="platform-container">
+    <div class="header">
+        <h2>🎓 PREMIER PLATFORM</h2>
+        <p>Enter your code to unlock the lecture</p>
+    </div>
+
+    <!-- فورم شحن الكود الخاص بالطالب -->
+    <div class="form-group">
+        <label for="studentName">Student Name</label>
+        <input type="text" id="studentName" placeholder="e.g., Mohammad Magdy">
+    </div>
+
+    <div class="form-group">
+        <label for="scratchCode">Scratch Card / Promo Code</label>
+        <input type="text" id="scratchCode" placeholder="XXXX-XXXX-XXXX" style="text-transform: uppercase;">
+    </div>
+
+    <button class="btn-charge" onclick="validateStudentCode()">🔐 Verify & Unlock</button>
+
+    <div id="alertBox" class="alert"></div>
+</div>
+
+<script>
+    // قاعدة بيانات وهمية للأكواد لمحاكاة السيستم قبل ربطه بالسيرفر
+    const validCodes = {
+        "MATH-2026-X1": { value: 80, isUsed: false, usedBy: null },
+        "PHYS-2026-X2": { value: 100, isUsed: true, usedBy: "Mohamed Sami" }, // كود مستخدم مسبقاً
+        "CHEM-2026-X3": { value: 85, isUsed: false, usedBy: null }
+    };
+
+    function validateStudentCode() {
+        const nameInput = document.getElementById("studentName").value.trim();
+        const codeInput = document.getElementById("scratchCode").value.trim().toUpperCase();
+        const alertBox = document.getElementById("alertBox");
+
+        // التحقق من إدخال البيانات
+        if (!nameInput || !codeInput) {
+            showAlert("Please fill in all fields.", "alert-warn");
+            return;
+        }
+
+        // البحث عن الكود في السيستم
+        if (codeInput in validCodes) {
+            const card = validCodes[codeInput];
+
+            if (card.isUsed) {
+                showAlert(`⚠️ This code was already used by (${card.usedBy}).`, "alert-error");
+            } else {
+                // تفعيل الكود بنجاح
+                card.isUsed = true;
+                card.usedBy = nameInput;
+                showAlert(`✅ Success! Lecture Unlocked. Balance Added: ${card.value} EGP.`, "alert-success");
+            }
+        } else {
+            showAlert("❌ Invalid code. Please check your card numbers.", "alert-error");
+        }
+    }
+
+    function showAlert(message, className) {
+        const alertBox = document.getElementById("alertBox");
+        alertBox.className = `alert ${className}`;
+        alertBox.innerHTML = message;
+        alertBox.style.display = "block";
+    }
+</script>
+
+</body>
+</html>
