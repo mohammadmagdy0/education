@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Education.API.Data;
 using Education.API.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Education.API.Controllers
@@ -18,35 +19,29 @@ namespace Education.API.Controllers
             _context = context;
         }
 
-        // 1. رابط شحن الكارت للطالب (POST: api/wallet/redeem)
         [HttpPost("redeem")]
         public async Task<IActionResult> RedeemCard([FromBody] RedeemRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.SecureCode))
                 return BadRequest(new { Message = "Code cannot be empty." });
 
-            // نفتح تانزاكشن (Transaction) لضمان عدم حدوث تضارب بيانات إذا ضغط الطالب مرتين في نفس الأجزاء من الثانية
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // التحقق من وجود الطالب
                 var student = await _context.Students.FindAsync(request.StudentID);
                 if (student == null) 
                     return NotFound(new { Message = "Student profile not found." });
 
-                // نظام الحماية (Device Binding) لمنع مشاركة الحسابات
                 if (student.DeviceID != null && student.DeviceID != request.CurrentDeviceID)
                 {
                     return StatusCode(403, new { Message = "Security Lock: This account belongs to another device." });
                 }
 
-                // إذا كان أول دخول له، نربط حسابه بجهازه الحالي للأبد
                 if (student.DeviceID == null)
                 {
                     student.DeviceID = request.CurrentDeviceID;
                 }
 
-                // البحث عن الكارت في قاعدة البيانات
                 var card = await _context.ScratchCards.FirstOrDefaultAsync(c => c.SecureCode == request.SecureCode);
                 if (card == null) 
                     return NotFound(new { Message = "This scratch card code is invalid." });
@@ -54,16 +49,14 @@ namespace Education.API.Controllers
                 if (card.IsUsed) 
                     return BadRequest(new { Message = $"This card was already used at {card.UsedAt}." });
 
-                // تفعيل الشحن
                 card.IsUsed = true;
                 card.UsedByStudentID = student.StudentID;
                 card.UsedAt = DateTime.UtcNow;
 
-                // إضافة الرصيد للمحفظة
                 student.WalletBalance += card.Value;
 
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync(); // حفظ كتل البيانات بنجاح تام
+                await transaction.CommitAsync(); 
 
                 return Ok(new { 
                     Message = "Card redeemed successfully!", 
@@ -73,12 +66,11 @@ namespace Education.API.Controllers
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(); // إلغاء العملية فوراً لو انقطع السيرفر حمايةً لأموال المدرس والطلاب
+                await transaction.RollbackAsync(); 
                 return StatusCode(500, new { Message = "An internal database error occurred." });
             }
         }
 
-        // 2. رابط لتوليد الكروت للمدرس (POST: api/wallet/generate)
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateCards([FromBody] GenerateCardsRequest request)
         {
@@ -89,7 +81,6 @@ namespace Education.API.Controllers
 
             for (int i = 0; i < request.Count; i++)
             {
-                // توليد كود عشوائي معقد يصعب اختراقه أو تخمينه
                 string uniqueCode = $"{request.Prefix.ToUpper()}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
                 
                 var card = new ScratchCard
@@ -108,7 +99,6 @@ namespace Education.API.Controllers
         }
     }
 
-    // الـ DTOs (Data Transfer Objects) لنقل البيانات في الطلبات
     public class RedeemRequest
     {
         public int StudentID { get; set; }
@@ -118,8 +108,8 @@ namespace Education.API.Controllers
 
     public class GenerateCardsRequest
     {
-        public string Prefix { get; set; } = "EDU"; // كود المادة مثل MATH أو CHEM
-        public int Count { get; set; } // عدد الكروت المطلوب طباعتها
-        public decimal CardValue { get; set; } // سعر الكارت الواحد
+        public string Prefix { get; set; } = "EDU"; 
+        public int Count { get; set; } 
+        public decimal CardValue { get; set; } 
     }
 }
