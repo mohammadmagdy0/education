@@ -1,41 +1,32 @@
+using Microsoft.EntityFrameworkCore;
+using Education.API.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// 1. إضافة خدمات الـ Controllers والـ OpenAPI (Swagger) لفحص الـ API
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// 2. تسجيل الـ AppDbContext وتحديد نص الاتصال (Connection String)
+// هنا نستخدم قاعدة بيانات مجهزة، ويمكن تعديل نص الاتصال لاحقاً بناءً على السيرفر الخاص بك
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? "Server=(localdb)\\mssqllocaldb;Database=EducationDb;Trusted_Connection=True;MultipleActiveResultSets=true";
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 3. إعدادات الـ HTTP Pipeline لتشغيل الـ API
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// 4. ربط الـ Controllers للعمل بشكل تلقائي
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
