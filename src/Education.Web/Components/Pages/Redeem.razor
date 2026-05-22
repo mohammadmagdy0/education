@@ -1,0 +1,213 @@
+@page "/redeem"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+
+<div class="glass-background">
+    <div class="glass-card">
+        <div class="balance-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wallet2" viewBox="0 0 16 16">
+                <path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.463-1.474l10.673-1.2l.001-.002zM14 4v9h1.5a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5zm-1 9V4H1.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5z"/>
+            </svg>
+            <span>Current Balance: <strong>$@currentBalance</strong></span>
+        </div>
+
+        <h2 class="title">Educational Recharge System</h2>
+        <p class="subtitle">Enter your secure code below to instantly charge your academic wallet.</p>
+
+        <div class="input-group">
+            <label for="cardCode">Secure Scratch Card Code</label>
+            <input type="text" id="cardCode" @bind="cardCode" placeholder="e.g., CARD-XXXX-XXXX" class="styled-input" />
+        </div>
+
+        <button class="btn-redeem" @onclick="HandleRedeem" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner"></span>
+                <span>Processing...</span>
+            }
+            else
+            {
+                <span>Redeem Voucher</span>
+            }
+        </button>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert-message @(isSuccess ? "success" : "error")">
+                @message
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string cardCode = "";
+    private decimal currentBalance = 0.00m;
+    private bool isLoading = false;
+    private string message = "";
+    private bool isSuccess = false;
+
+    private async Task HandleRedeem()
+    {
+        if (string.IsNullOrWhiteSpace(cardCode))
+        {
+            message = "Please enter a valid code.";
+            isSuccess = false;
+            return;
+        }
+
+        isLoading = true;
+        message = "";
+
+        try
+        {
+            // محاكاة طلب للـ API الشغال في الخلفية
+            await Task.Delay(1500); // أنيميشن التحميل الفوري
+            
+            isSuccess = true;
+            currentBalance += 50.00m; // إضافة تجريبية للرصيد
+            message = "Success! $50.00 has been added to your wallet.";
+            cardCode = "";
+        }
+        catch (Exception)
+        {
+            isSuccess = false;
+            message = "Connection error. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<style>
+    .glass-background {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        min-height: 85vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        border-radius: 16px;
+        padding: 20px;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        position: relative;
+    }
+    .balance-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 8px 16px;
+        border-radius: 50px;
+        color: #e2e8f0;
+        font-size: 14px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .title {
+        color: #fff;
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .subtitle {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-bottom: 32px;
+    }
+    .input-group {
+        text-align: left;
+        margin-bottom: 24px;
+    }
+    .input-group label {
+        color: #cbd5e1;
+        font-size: 13px;
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .styled-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 14px 16px;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+    .styled-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+    .btn-redeem {
+        width: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-redeem:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    }
+    .btn-redeem:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .alert-message {
+        margin-top: 24px;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .alert-message.success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .alert-message.error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
